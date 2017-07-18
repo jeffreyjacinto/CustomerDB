@@ -1,0 +1,14 @@
+{% from "_formhelpers.html" import render_field %}
+<div class="order-search">
+  <h1>Find Customer</h1>
+  <form action="" method="post" name="order-search">
+    {{ form.hidden_tag() }}
+      <dl>
+        {{ render_field(form.order_num) }}
+        {{ render_field(form.order_date) }}
+      </dl>
+      <p>
+        <input type="submit" value="Search">
+      </p>
+  </form>
+</div>

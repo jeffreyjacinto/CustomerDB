@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+  <h1>New Order</h1>
+  {% with edit = False %}
+  {% include "order.html" %}
+  {% endwith %}
+{% endblock %}

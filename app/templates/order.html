@@ -1,0 +1,31 @@
+{% from "_formhelpers.html" import render_field %}
+<div class="order">
+  <h1>Order</h1>
+  <form {% if edit %} action="../edit-order" {% else %} action="" {% endif %} method="post" name="order">
+    {{ form.hidden_tag() }}
+      <dl>
+        {{ render_field(form.first_name) }}
+        {{ render_field(form.last_name) }}
+        {{ render_field(form.phone) }}
+        {{ render_field(form.order_num) }}
+        {{ render_field(form.order_date) }}
+        {{ render_field(form.est_pickup_date) }}
+        {{ render_field(form.pickup_date) }}
+        {{ render_field(form.location) }}
+        {{ render_field(form.items_field) }}
+        {{ render_field(form.price) }}
+        {{ render_field(form.transactions_field) }}
+        {{ render_field(form.paid) }}
+        {{ render_field(form.paid_all) }}
+        {{ render_field(form.comments) }}
+        {{ render_field(form.id) }}
+      </dl>
+      <p>
+        {% if edit %}
+          <input type="submit" value="Edit">
+        {% else %}
+          <input type="submit" value="Order">
+        {% endif %}
+      </p>
+  </form>
+</div>

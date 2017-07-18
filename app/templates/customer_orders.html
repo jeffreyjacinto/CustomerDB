@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+	{% include "customer.html" %}
+	{% with edit = True %}
+	{% include "orders_list.html" %}
+    {% endwith %}
+{% endblock %}

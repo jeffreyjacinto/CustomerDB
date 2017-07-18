@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+	<ul>
+	{% for customer in customers %}
+		<li>{% include "customer.html" %}</li>
+	{% endfor %}
+	</ul>
+{% endblock %}
