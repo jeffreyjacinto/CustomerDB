@@ -1,1 +1,4 @@
 flask/
+__pycache_/
+app.db
+test.db
