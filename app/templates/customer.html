@@ -1,46 +1,42 @@
-<div class="customer">
-	<table>
+{% from "_formhelpers.html" import render_field %}
+<div class="customer center">
+	<table class="table">
 		<caption>Customer #{{ customer.id }}</caption>
-		<tr>
-			<td>First Name</td>
-			<td>{{ customer.first_name }}</td>
-		</tr>
-		<tr>
-			<td>Last Name</td>
-			<td>{{ customer.last_name }}</td>
-		</tr>
-		<tr>
-			<td>Phone</td>
-			<td>{{ customer.phone }}</td>
-		</tr>
-		<tr>
-			<td>Balance</td>
-			<td>{{ customer.balance }}</td>
-		</tr>
-		{% if form %}
+		<tbody>
 			<tr>
-				<td>Comments</td>
-				<td>
-					<form action="{{ url_for('customer_comment', customer_id = customer.id) }}" method="post" name="customer-comment">
-						{{ form.hidden_tag() }}
-						<dl>
-							{{ render_field(form.comments) }}
-						</dl>
-						<p>
-							<input type="submit" value="Comment">
-						</p>
-					</form>
-				</td>
+				<td>First Name</td>
+				<td>{{ customer.first_name }}</td>
 			</tr>
-		{% endif %}
+			<tr>
+				<td>Last Name</td>
+				<td>{{ customer.last_name }}</td>
+			</tr>
+			<tr>
+				<td>Phone</td>
+				<td>{{ customer.phone }}</td>
+			</tr>
+			<tr>
+				<td>Balance</td>
+				<td>{{ '%0.2f' | format(customer.balance | float) }}</td>
+			</tr>
+		</tbody>
 	</table>
-	<ul>
+	{% if form %}
+	<div>
+		<form action="{{ url_for('customer_comments', customer_id = customer.id) }}" method="post" name="customer-comment">
+			{{ form.hidden_tag() }}
+			{{ render_field(form.comments) }}
+			<input type="submit" value="Comment">
+		</form>
+	</div>
+	{% endif %}
+	<ul class="list-unstyled">
 		<li><a href="{{ url_for('customer_orders', customer_id = customer.id, location = 'plant') }}">Orders - Plant</a></li>
 		<li><a href="{{ url_for('customer_orders', customer_id = customer.id, location = 'cleaners') }}">Orders - Cleaners</a></li>
 		<li><a href="{{ url_for('customer_orders', customer_id = customer.id, location = 'delivered') }}">Orders - Delivered</a></li>
 		<li><a href="{{ url_for('customer_orders', customer_id = customer.id, location = 'all') }}">Orders - All</a></li>
 		{% if not form %}
-			<li><a href="{{ url_for('customer_comments', customer_id = customer.id) }}">Comments</a></li>
+			<li><a href="{{ url_for('show_customer', customer_id = customer.id) }}">Comments</a></li>
 		{% endif %}
 	</ul>
 </div>

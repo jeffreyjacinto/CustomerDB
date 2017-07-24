@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+	<div class="center">
+		<h1>Transactions {{ date.isoformat() }}</h1>
+		<ul class="list-unstyled">
+		{% for transaction in transactions %}
+			<li>{% include "transaction.html" %}</li>
+		{% endfor %}
+		</ul>
+	</div>
+{% endblock %}

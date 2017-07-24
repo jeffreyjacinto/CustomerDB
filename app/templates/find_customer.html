@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% set active_page = "find_customer" %}
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="customer-search center">
+  <h1>Find Customer</h1>
+  <form action="" method="post" name="customer-search">
+    {{ form.hidden_tag() }}
+    <div class="form-group">
+      <div class="row">
+        {{ render_field(form.last_name, 2, 4) }}
+        {{ render_field(form.phone, 2, 4) }}
+      </div>
+    </div>
+    <p>
+      <input type="submit" class="btn-default" value="Search">
+    </p>
+  </form>
+</div>
+{% endblock %}

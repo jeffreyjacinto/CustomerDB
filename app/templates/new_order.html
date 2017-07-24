@@ -1,7 +1,10 @@
 {% extends "base.html" %}
+{% set active_page = "new_order" %}
 {% block content %}
-  <h1>New Order</h1>
-  {% with edit = False %}
-  {% include "order.html" %}
-  {% endwith %}
+	<div class="center">
+	  <h1>New Order</h1>
+	  {% with edit = False %}
+	  {% include "order.html" %}
+	  {% endwith %}
+	</div>
 {% endblock %}

@@ -1,14 +1,32 @@
+{% extends "base.html" %}
+{% set active_page = "find_order" %}
+{% block content %}
 {% from "_formhelpers.html" import render_field %}
-<div class="order-search">
-  <h1>Find Customer</h1>
+<div class="order-search center">
+  <h1>Find Order</h1>
   <form action="" method="post" name="order-search">
     {{ form.hidden_tag() }}
-      <dl>
-        {{ render_field(form.order_num) }}
-        {{ render_field(form.order_date) }}
-      </dl>
-      <p>
-        <input type="submit" value="Search">
-      </p>
+    <div class="form-group">
+      <div class="row">
+        {{ render_field(form.order_num, 2, 4) }}
+        {{ render_field(form.order_date, 2, 4) }}
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="row">
+        {{ render_field(form.location, 2, 4) }}
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="row">
+        {{ render_field(form.sum_price, 2, 2) }}
+        {{ render_field(form.sum_paid, 2, 2) }}
+        {{ render_field(form.sum_balance, 2, 2) }}
+      </div>
+    </div>
+    <p>
+      <input type="submit" class="btn-default" value="Search">
+    </p>
   </form>
 </div>
+{% endblock %}

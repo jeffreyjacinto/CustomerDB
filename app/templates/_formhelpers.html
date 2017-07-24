@@ -1,25 +1,76 @@
-{% macro render_field(field) %}
+{% macro render_field(field, label_size, field_size) %}
   {% if field.type != 'HiddenField' %}
-    <dt>{{ field.label }}</dt>
-    <dd>{{ field(**kwargs)|safe }}
+    {% if field.name != 'id' %} {{ field.label(class="control-label col-md-" + label_size|string) }} {% endif %}
+  <div class="form-group col-md-{{ field_size }}">
+    {{ field(class="form-control", **kwargs)|safe }}
+  </div>
     {% if field.errors %}
-      <ul class="errors">
+      <ul class="errors list-unstyled">
       {% for error in field.errors %}
         <li>{{ error }}</li>
       {% endfor %}
       </ul>
     {% endif %}
-    </dd>
   {% else %}
     {% if field.errors %}
-      <dt>Errors:</dt>
-       <dd>
-        <ul class="errors">
-        {% for error in field.errors %}
-          <li>{{ error }}</li><br>
-        {% endfor %}
-        </ul>
-      </dd>
+      <p>Errors:</p>
+      <ul class="errors list-unstyled">
+      {% for error in field.errors %}
+        <li>{{ error }}</li><br>
+      {% endfor %}
+      </ul>
     {% endif %}
   {% endif %}
+{% endmacro %}
+
+{% macro render_field_vertical(field) %}
+  {% if field.type != 'HiddenField' %}
+  <div class="form-group">
+    {% if not field.name.endswith('-id_field') and not field.name.endswith('-csrf_token')  and not field.name.endswith('id') %} {{ field.label(class="control-label") }} {% endif %}
+    {{ field(class="form-control", **kwargs)|safe }}
+    {% if field.errors %}
+      <ul class="errors list-unstyled">
+      {% for error in field.errors %}
+        <li>{{ error }}</li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+  {% else %}
+    {% if field.errors %}
+      <p>Errors:</p>
+      <ul class="errors list-unstyled">
+      {% for error in field.errors %}
+        <li>{{ error }}</li><br>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  {% endif %}
+{% endmacro %}
+
+{% macro render_entry(entry, name, field_size) %}
+  <div class="fieldlist-{{ name }}">
+    <div class="row">
+    {% for field in entry.form %}
+    {% if 'csrf_token' not in field.name and 'id' not in field.name %}
+      <div class="col-md-{{ field_size }}">{{ render_field_vertical(field) }}</div>
+    {% else %}
+      {{ render_field_vertical(field) }}
+    {% endif %}
+    {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro render_fieldlist(field, num_forms, label_text) %}
+  <label>{{ label_text }}</label>
+  <div class="fieldlist">
+  {% for entry in field.entries %}
+    {{ render_entry(entry, "entry", (12 / num_forms)|int) }}
+  {% endfor %}
+  </div>
+  <button type="button" class="btn-default fieldlist-add">
+    {{ render_entry(field | proto_fieldlist, "prototype", (12 / num_forms)|int) }}
+    <span class="fa fa-plus"></span> Add
+  </button>
 {% endmacro %}

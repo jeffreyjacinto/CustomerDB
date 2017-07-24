@@ -2,6 +2,8 @@
 {% block content %}
 	{% include "customer.html" %}
 	{% with edit = True %}
-	{% include "orders_list.html" %}
-    {% endwith %}
+	<div class="center">
+		{% include "orders_list.html" %}
+	</div>
+	{% endwith %}
 {% endblock %}

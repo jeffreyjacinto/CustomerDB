@@ -1,11 +1,11 @@
 from flask_wtf import Form
-from wtforms import StringField, DateField, DecimalField, HiddenField, BooleanField, TextAreaField, validators
-from wtforms.fields.html5 import TelField
+from wtforms import StringField, DateField, DecimalField, HiddenField, BooleanField, TextAreaField, IntegerField, SelectField, FieldList, FormField, validators
+from wtforms.widgets import HiddenInput, html_params, HTMLString
 from app.models import Customer, Order
-import decimal
+import decimal, datetime
 
 class Item():
-	def __init__(self, quanity, article, price):
+	def __init__(self, quantity, article, price):
 		self.quantity = quantity
 		self.article = article
 		self.price = price
@@ -15,43 +15,61 @@ class ItemForm(Form):
 	item_choices = [(choice, choice) for choice in item_choices]
 	quantity = IntegerField('Qt.', validators = [validators.DataRequired()])
 	article = SelectField('Type', choices = item_choices, validators = [validators.DataRequired()])
-	price = DecimalField('Price', validators = [validators.DataRequired()])
+	price = DecimalField('Price', places = 2, validators = [validators.DataRequired()])
 
 	def __str__(self):
 		return ' -- '.join([str(self.quantity.data), self.article.data, str(self.price.data)])
 
+class DatePickerWidget(object):
+	html_params = staticmethod(html_params)
+
+	def __call__(self, field, **kwargs):
+		kwargs.setdefault('id', field.id)
+		kwargs.setdefault('data-name', field.name)
+		value = kwargs.get('value')
+		if value:
+			del kwargs['value']
+		else:
+			value = field.data
+			if not value:
+				value = ''
+			kwargs['data-date'] = value
+		return HTMLString('<div class="bfh-datepicker" data-format="y-m-d" %s>\
+			</div>' % self.html_params(**kwargs))
+
+class PhoneWidget(object):
+	html_params = staticmethod(html_params)
+
+	def __call__(self, field, **kwargs):
+		kwargs.setdefault('id', field.id)
+		kwargs.setdefault('name', field.name)
+		kwargs.setdefault('value', field.data)
+		return HTMLString('<input type="text" class="form-control bfh-phone" data-format="(ddd) ddd-dddd" %s>' % self.html_params(**kwargs))
+
 class TransactionForm(Form):
 	type_choices = ['discount', 'payment']
-	type_choices = [(choice, choice) for choice in type_choices] # conform to _choices format
+	type_choices = [(choice, choice) for choice in type_choices]
 
-	amount = DecimalField('Amount', validators = [validators.DataRequired()])
+	amount = DecimalField('Amount', places = 2, validators = [validators.DataRequired()])
 	description = SelectField('Type', choices = type_choices, validators = [validators.DataRequired()])
-	date = DateField('Date', validators = [validators.DataRequired()])
+	date = DateField('Date', widget = DatePickerWidget(), validators = [validators.DataRequired()])
 	error_field = HiddenField('errors')
-	id = IntegerField(widget = HiddenInput(), validators = [validators.Optional()])
+	id_field = IntegerField('Id', widget = HiddenInput(), validators = [validators.Optional()])
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
-		self.transaction = None
+		
+		if not self.date.data:
+			self.date.data = datetime.date.today()
 
-	def add_transaction(self, order):
-		self.transaction = Transaction(amount = self.amount.data, description = self.description.data, date = self.date.data, order_id = order.id)
+	@property
+	def kwargs(self):
+		return dict(amount = self.amount.data, description = self.description.data, date = self.date.data, id = self.id_field.data)
 
-	def validate(self):
-		rv = Form.validate(self)
-		if not rv:
-			return False
-
-		if self.id.data:
-			self.transaction = Transaction.query.filter_by(id = self.id.data).first()
-			if self.transaction:
-				transaction.amount = self.amount.data
-				transaction.description = self.description.data
-				transaction.date = self.date.data
-			else:
-				error_field.errors.append('Invalid Transaction ID. Delete Transaction.')
-				return False
-		return True
+	def populate_obj(self, transaction):
+		transaction.amount = self.amount.data
+		transaction.description = self.description.data
+		transaction.date = self.date.data
 
 class OrderForm(Form):
 	locations = ['cleaners', 'delivered', 'plant']
@@ -65,30 +83,42 @@ class OrderForm(Form):
 		validators.DataRequired(),
 		validators.Length(min = 1, max= 25)
 	])
-	phone = TelField('Phone', validators = [validators.DataRequired(), validators.Length(min = 10, max = 10)])
-	order_num = IntegerField('Order Number', validators = [validators.DataRequired()])
-	order_date = DateField('Order Date', validators = [validators.DataRequired()])
-	est_pickup_date = DateField('Est Pickup Date', validators = [validators.DataRequired()])
-	pickup_date = DateField('Pickup Date', validators = [validators.Optional()])
+	phone = StringField('Phone', widget = PhoneWidget(), validators = [validators.DataRequired(), validators.Length(min = 14, max = 14)])
+	order_num = IntegerField('Order #', validators = [validators.DataRequired()])
+	order_date = DateField('Order Date', widget = DatePickerWidget(), validators = [validators.DataRequired()])
+	est_pickup_date = DateField('Est Pickup Date', widget = DatePickerWidget(), validators = [validators.DataRequired()])
+	pickup_date = DateField('Pickup Date', widget = DatePickerWidget(), validators = [validators.Optional()])
 	location = SelectField('Location', choices = locations, validators = [validators.DataRequired()])
 	items_field = FieldList(FormField(ItemForm), min_entries = 1)
-	price = DecimalField('Price', validators = [validators.DataRequired()])
+	pieces = IntegerField('Pieces', validators = [validators.DataRequired()])
+	price = DecimalField('Price', places = 2, validators = [validators.DataRequired()])
 	transactions_field = FieldList(FormField(TransactionForm), min_entries = 0, validators = [validators.Optional()])
-	paid = DecimalField('Amount Paid', default = 0, validators = [validators.Optional()])
+	paid = DecimalField('Amount Paid', default = 0, places = 2, validators = [validators.Optional()])
 	paid_all = BooleanField('Paid', default = False, validators = [validators.Optional()])
-	comments = TextAreaField('Comments', render_kw={"rows": 70, "cols": 11}, validators = [validators.Optional()])
+	comments = TextAreaField('Comments', render_kw = {"rows": 11, "cols": 70}, validators = [validators.Optional(), validators.Length(max = 250)])
 	error_field = HiddenField('errors')
-	id = IntegerField(widget = HiddenInput(), validators = [validators.Optional()])
+	id_field = IntegerField('Id', widget = HiddenInput(), validators = [validators.Optional()])
 
 	def __init__(self, *args, **kwargs):
+		transactions = None
+		if 'obj' in kwargs:
+			order = kwargs['obj']
+			kwargs['first_name'] = order.customer.first_name
+			kwargs['last_name'] = order.customer.last_name
+			kwargs['phone'] = order.customer.phone
+		if 'transactions_field' in kwargs:
+			transactions = kwargs['transactions_field']
+			del kwargs['transactions_field']
 		if 'items_field' in kwargs:
 			items = kwargs['items_field']
 			items = items.split(', ')
 			items = [OrderForm.populate_item(item) for item in items]
 			kwargs['items_field'] = items
 		Form.__init__(self, *args, **kwargs)
-		self.customer = None
-		self.order = None
+
+		if transactions:
+			for transaction in transactions:
+				self.transactions_field.append_entry(data = dict(obj = transaction, id_field = transaction.id))
 
 		# set default dates
 		if not self.order_date.data:
@@ -104,115 +134,93 @@ class OrderForm(Form):
 		price = decimal.Decimal(item_list[2])
 		return Item(quantity, article, price)
 
-	def stringify_items(self):
-		item_string = ', '.join([str(entry) for entry in self.items_field.entries])
-		return item_string
+	def populate_obj(self, order):
+		order.order_num = self.order_num.data
+		order.order_date = self.order_date.data
+		order.est_pickup_date = self.est_pickup_date.data
+		order.pickup_date = self.pickup_date.data
+		order.location = self.location.data
+		order.items = self.stringify_items()
+		order.pieces = self.pieces.data
+		order.price = self.price.data
+		order.paid = self.paid.data
+		order.comments = self.comments.data
 
-	def add_transactions(self):
-		for transaction_field in self.transactions.entries:
-			if not transaction_field.transaction:
-				transaction_field.add_transaction(self.order)
+	def populate_customer(self, customer):
+		customer.first_name = self.first_name.data
+		customer.last_name = self.last_name.data
+		customer.phone = self.phone.data
+
+	@property
+	def customer_kwargs(self):
+		return dict(first_name = self.first_name.data, last_name = self.last_name.data, phone = self.phone.data)
+
+	def stringify_items(self):
+		item_string = ', '.join([str(entry.form) for entry in self.items_field.entries])
+		return item_string
 
 	def validate(self):
 		rv = Form.validate(self)
 		if not rv:
 			return False
 
-		# validate phone stuff
 		if self.paid_all.data and self.paid.data < self.price.data:
 			self.paid.data = self.price.data
-
-		if self.id.data:
-			self.order = Order.query.filter_by(id = self.id.data).first()
-			if self.order:
-				customer = self.order.customer
-				customer.remove_order(self.order)
-				self.order.location = self.location.data
-				self.order.est_pickup_date = self.est_pickup_date.data
-				self.order.pickup_date = self.pickup_date.data
-				self.order.items = self.stringify_items()
-				self.add_transactions()
-				self.order.update_balance()
-				self.order.comments = self.comments.data
-				customer.add_order(self.order)
-
-			return True
-
-		customer = Customer.query.filter_by(first_name = self.first_name.data, last_name = self.last_name.data, phone = self.phone.data).first()
-		if customer:
-			self.customer = customer
-		else:
-			# add new customer to database
-			self.customer = Customer(first_name = self.first_name.data, last_name = self.last_name.data, phone = self.phone.data, balance = 0)
-		self.order = Order(order_num = self.order_num.data, order_date = self.order_date.data, est_pickup_date = self.est_pickup_date.data, pickup_date = self.pickup_date.data, location = self.location.data, items = self.stringify_items(), price = self.price.data, paid = self.paid.data, comments = self.comments.data, customer_id = self.customer.id)
-		self.add_transactions()
-		self.order.calculate_paid()
-		self.customer.add_order(self.order)
 		return True
 
 class FindOrderForm(Form):
+	locations = ['', 'cleaners', 'delivered', 'plant', 'inventory']
+	locations = [(location, location) for location in locations]
+	
 	order_num = IntegerField('Order Number', validators = [validators.Optional()])
-	order_date = DateField('Order Date', validators = [validators.Optional()])
+	order_date = DateField('Order Date', widget = DatePickerWidget(), validators = [validators.Optional()])
+	location = SelectField('Location', choices = locations, validators = [validators.Optional()])
+	sum_price = BooleanField('Sum Prices', default = False, validators = [validators.Optional()])
+	sum_paid = BooleanField('Sum Paid', default = False, validators = [validators.Optional()])
+	sum_balance = BooleanField('Sum Balance', default = False, validators = [validators.Optional()])
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
-		self.orders = None
-		self.customers = None
-		self.customer_id = None
+		self.order_kwargs = None
 
 	def validate(self):
 		rv = Form.validate(self)
 		if not rv:
 			return False
 
+		order_kwargs = dict()
 		if self.order_num.data:
-			self.orders = Order.query.filter_by(order_num = self.order_num.data).all()
-		elif self.order_date.data:
-			self.orders = Order.query.filter_by(order_date = self.order_date.data).all()
-		else:
-			return False
-		
-		return True
+			order_kwargs['order_num'] = self.order_num.data
+		if self.order_date.data:
+			order_kwargs['order_date'] = self.order_date.data
+		if self.location.data:
+			order_kwargs['location'] = self.location.data
+		if order_kwargs:
+			self.order_kwargs = order_kwargs
+			return True
+		self.order_kwargs = None
+		return False
 
 class FindCustomerForm(Form):
 	last_name = StringField('Last Name', validators = [validators.Optional()])
-	phone = TelField('Phone', validators = [validators.Optional(), validators.Length(min = 10, max = 10)])
-
-	def __init__(self, *args, **kwargs):
-		Form.__init__(self, *args, **kwargs)
-		self.customers = None
+	phone = StringField('Phone', widget = PhoneWidget(), validators = [validators.Optional(), validators.Length(min = 10, max = 10)])
 
 	def validate(self):
 		rv = Form.validate(self)
 		if not rv:
 			return False
 
+		customer_kwargs = dict()
 		if self.last_name.data:
-			self.customers = Customer.query.filter_by(last_name = self.last_name.data).all()
-		elif self.phone.data:
-			self.customers = Customer.query.filter_by(phone = self.phone.data).all()
-		else:
-			return False
-		
-		return True
+			customer_kwargs['last_name'] = self.last_name.data
+		if self.phone.data:
+			customer_kwargs['phone'] = self.phone.data
+		if customer_kwargs:
+			self.customer_kwargs = customer_kwargs
+			return True
+		self.customer_kwargs = None
+
+		return False
 
 class CustomerForm(Form):
-	comments = TextAreaField('Comment', render_kw={"rows": 70, "cols": 11})
-	id = IntegerField(widget = HiddenInput(), validators = [validators.DataRequired()])
-
-	def __init__(self, *args, **kwargs):
-		Form.__init__(self, *args, **kwargs)
-		self.customer = None
-
-	def validate(self):
-		rv = Form.validate(self)
-		if not rv:
-			return False
-
-		self.customer = Customer.query.filter_by(id = self.id.data).first()
-		if self.customer:
-			self.customer.comments = self.comments.data
-		else:
-			return False
-		
-		return True
+	comments = TextAreaField('Comment', render_kw={"rows": 11, "cols": 70}, validators = [validators.DataRequired(), validators.Length(max = 250)])

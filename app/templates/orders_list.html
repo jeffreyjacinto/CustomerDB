@@ -1,6 +1,33 @@
 <h1>Orders</h1>
-<ul>
+{% set sum_price = sum_price | default(None) %}
+{% set sum_paid = sum_paid | default(None) %}
+{% set sum_balance = sum_balance | default(None) %}
+
+{% if sum_price != None or sum_paid != None or sum_balance != None %}
+<table class="table table-bordered">
+	<caption>Order Sums</caption>
+	{% if sum_price != None %}
+	<tr>
+		<td>Price</td>
+		<td>{{ '%0.2f' | format(sum_price | float) }}</td>
+	</tr>
+	{% endif %}
+	{% if sum_paid != None %}
+	<tr>
+		<td>Paid</td>
+		<td>{{ '%0.2f' | format(sum_paid | float) }}</td>
+	</tr>
+	{% endif %}
+	{% if sum_balance != None %}
+	<tr>
+		<td>Balance</td>
+		<td>{{ '%0.2f' | format(sum_balance | float) }}</td>
+	</tr>
+	{% endif %}
+</table>
+{% endif %}
+<div id="orders">
 {% for form in order_forms %}
-	<li>{% include "order.html" %}</li>
+	{% include "order.html" %}
 {% endfor %}
-</ul>
+</div>
