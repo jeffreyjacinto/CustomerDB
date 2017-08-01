@@ -17,89 +17,156 @@
 		<script src="/static/js/bootstrap-formhelpers-datepicker.js"></script>
 		<script src="/static/js/bootstrap-formhelpers-phone.js"></script>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-      $(function(){
-          function fieldlist_add() {        // define event handler
-              var $this   = $(this),
-                  fieldlist = $this.parent().find('.fieldlist').first(),
-                  fieldlist_proto = $this.find('.fieldlist-prototype').first(),
-                  fieldlist_proto_groups = fieldlist_proto.find('.form-group');
+		<script>
+			$(function(){
+					function fieldlist_add() {        // define event handler
+							var $this   = $(this),
+									fieldlist = $this.parent().find('.fieldlist').first(),
+									fieldlist_proto = $this.find('.fieldlist-prototype').first(),
+									fieldlist_proto_groups = fieldlist_proto.find('.form-group');
 
-              fieldlist.append(fieldlist_proto.clone().removeClass('fieldlist-prototype').addClass('fieldlist-entry'));
-              fieldlist_proto_groups.each(function() {
-                var labels = $(this).find('.control-label'),
-                    form_fields = $(this).find('.form-control');
+							fieldlist.append(fieldlist_proto.clone().removeClass('fieldlist-prototype').addClass('fieldlist-entry'));
+							fieldlist_proto_groups.each(function() {
+								var labels = $(this).find('.control-label'),
+										form_fields = $(this).find('.form-control');
 
-                labels.each(function() {
-                  var $this = $(this),
-                      for_string = $this.attr('for');
+								labels.each(function() {
+									var $this = $(this),
+											for_string = $this.attr('for');
 
-                  for_string = for_string.replace(/(\_field\-)(\d+)(\-)/,
-                    function(fullMatch, pre, n, post) {
-                      return pre + (Number(n) + 1) + post;
-                    });
+									for_string = for_string.replace(/(\_field\-)(\d+)(\-)/,
+										function(fullMatch, pre, n, post) {
+											return pre + (Number(n) + 1) + post;
+										});
 
-                  $this.attr('for', for_string);
-                });
+									$this.attr('for', for_string);
+								});
 
-                form_fields.each(function() {
-                  var $this = $(this),
-                      id = $this.attr('id'),
-                      name = $(this).attr('name');
+								form_fields.each(function() {
+									var $this = $(this),
+											id = $this.attr('id'),
+											name = $(this).attr('name');
 
-                  id = id.replace(/(\_field\-)(\d+)(\-)/,
-                    function(fullMatch, pre, n, post) {
-                      return pre + (Number(n) + 1) + post;
-                    });
-                  
-                  name = name.replace(/(\_field\-)(\d+)(\-)/,
-                    function(fullMatch, pre, n, post) {
-                      return pre + (Number(n) + 1) + post;
-                    });
+									if (id) {
+										id = id.replace(/(\_field\-)(\d+)(\-)/, function(fullMatch, pre, n, post) {
+												return pre + (Number(n) + 1) + post;
+										});
+									}
+									
+									name = name.replace(/(\_field\-)(\d+)(\-)/,
+										function(fullMatch, pre, n, post) {
+											return pre + (Number(n) + 1) + post;
+										});
 
-                  $this.attr({'id': id, 'name': name});
-                });
-              });
-          }
-
-          function add_alert(message, category) {
-						$('#container-alert').append('<div class="alert alert-' + category + ' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>')
-          }
-
-          $('.fieldlist-add').click(fieldlist_add);  // attach event handler
-          $('.order-form').submit(function(event) {  // clean up prototypes
-          	var $form = $(this),
-          			toEdit = $form.attr('toEdit'),
-          			action = $form.attr('action');
-
-            $('.fieldlist-prototype').find('input,select').attr('disabled', 'disabled');
-            if (toEdit == 'true') {
-            	event.preventDefault();
-            	$.ajax({
-							  type: "POST",
-							  url: action,
-							  data: $form.serialize(),
-							  success: function () {
-							  	$('.fieldlist-prototype').find('input,select').removeAttr('disabled');
-							  	add_alert('Order edited', 'success');
-							  },
-							  fail: function () {
-							  	$('.fieldlist-prototype').find('input,select').removeAttr('disabled');
-							  	add_alert('Order edit failed', 'danger');
-							  }
+									$this.attr({'id': id, 'name': name});
+								});
 							});
-            }
-          });
-          $('.collapse-control').click(function() {
-          	var $this = $(this),
-          			collapsables = $this.parent().find('.collapse'),
-          			target = $($this.attr('data-target')).first();
+					}
 
-          	collapsables = collapsables.collapse('hide');
-          	target.collapse('toggle');
-          });
-      });
-    </script>
+					function add_alert(message, category) {
+						$('#container-alert').append('<div class="alert alert-' + category + ' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>' + message + '</div>')
+					}
+
+					$('.fieldlist-add').click(fieldlist_add);  // attach event handler
+					$('.order-form').submit(function(event) {  // clean up prototypes
+						var $form = $(this),
+								toEdit = $form.attr('toEdit'),
+								action = $form.attr('action');
+
+						$('.fieldlist-prototype').find('input,select').attr('disabled', 'disabled');
+						if (toEdit == 'true') {
+							event.preventDefault();
+							$.ajax({
+								type: "POST",
+								url: action,
+								data: $form.serialize(),
+								success: function () {
+									$('.fieldlist-prototype').find('input,select').removeAttr('disabled');
+									add_alert('Order edited', 'success');
+								},
+								fail: function () {
+									$('.fieldlist-prototype').find('input,select').removeAttr('disabled');
+									add_alert('Order edit failed', 'danger');
+								}
+							});
+						}
+					});
+					$('.collapse-control').click(function() {
+						var $this = $(this),
+								collapsables = $this.parent().find('.collapse'),
+								target = $($this.attr('data-target')).first();
+
+						collapsables = collapsables.collapse('hide');
+						target.collapse('toggle');
+					});
+
+					$('.items').on("change", ".item_price", function() {
+						var $this = $(this),
+								fieldlist = $this.closest('.items'),
+								sum = 0;
+						fieldlist.find(".item_price").each(function() {
+							sum += +$(this).val();
+						});
+						$this.closest('.order-form').find(".price-total").val(sum).change();
+					});
+
+					$('.items').on("change", ".item_quantity", function() {
+						var $this = $(this),
+								fieldlist = $this.closest('.items'),
+								sum = 0;
+						fieldlist.find(".item_quantity").each(function() {
+							sum += +$(this).val();
+						});
+						$this.closest('.order-form').find(".pieces-total").val(sum);
+					});
+
+					$('.transactions').on("change", ".transaction_amount", function() {
+						var $this = $(this),
+								fieldlist = $this.closest('.transactions'),
+								sum = 0;
+						fieldlist.find(".transaction_amount").each(function() {
+							sum += +$(this).val();
+						});
+						$this.closest('.order-form').find(".paid-total").val(sum).change();
+					});
+
+					$('.paid-total').change(function() {
+						var $this = $(this),
+								sumPrice = +$('.sum-price').first().val(),
+								sum = 0;
+						$('.paid-total').each(function() {
+							sum += +$(this).val();
+						});
+						$('.sum-paid').val(sum);
+						$('.sum-balance').val(sum - sumPrice);
+					});
+
+					$('.price-total').change(function() {
+						var $this = $(this),
+								sumPaid = +$('.sum-paid').first().val(),
+								sum = 0;
+						$('.price-total').each(function() {
+							sum += +$(this).val();
+						});
+						$('.sum-price').val(sum);
+						$('.sum-balance').val(sumPaid - sum);
+					});
+
+					function payAll() {
+						var orderForm = $(this).closest('.order-form'),
+								transactions = orderForm.find('.transactions').first().parent(),
+								totalPrice = +orderForm.find('.price-total').first().val(),
+								totalPaid = +orderForm.find('.paid-total').first().val();
+
+						if (totalPrice - totalPaid > 0) {
+							transactions.find('.fieldlist-add').click();
+							transactions.find('.fieldlist-entry').last().find('.transaction_amount').val(totalPrice - totalPaid).change();
+						}
+					}
+
+					$('.pay-all').click(payAll);
+			});
+		</script>
 
 		<style>
 			body {
@@ -115,11 +182,11 @@
 			}
 
 			.fixed-top {
-			    position: fixed;
-			    top: 0;
-			    right: 0;
-			    left: 0;
-			    z-index: 1030;
+					position: fixed;
+					top: 0;
+					right: 0;
+					left: 0;
+					z-index: 1030;
 			}
 
 			.center {
@@ -142,6 +209,10 @@
 
 			.form-group.col-sm-2 {
 				padding: 0;
+			}
+
+			.table-info input {
+				border: none;
 			}
 		</style>
 	</head>

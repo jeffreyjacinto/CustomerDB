@@ -4,17 +4,6 @@ from app import app, db
 from .models import Customer, Order, Transaction
 from .forms import OrderForm, FindOrderForm, FindCustomerForm, CustomerForm
 
-# find order
-# 	order number
-#	customer name + telephone
-# create order
-#	order number
-#	customer name
-#	customer telephone
-#	price
-#	date
-#	return date
-#	number of pieces, subtotals
 def customer_query(**kwargs):
 	return Customer.query.filter_by(**kwargs)
 
@@ -71,7 +60,7 @@ def show_order(order_id):
 	if not order:
 		flash('Order #%i not found' % order_id, 'danger')
 		return redirect(url_for('find_orders'))
-	order_forms = [OrderForm(obj = order, id_field = order.id, items_field = order.items, transactions_field = order.transactions.all())]
+	order_forms = [OrderForm(obj = order)]
 	return render_template('orders.html',
 							order_forms = order_forms)
 
@@ -92,7 +81,7 @@ def find_orders():
 		if not orders:
 			flash('No Orders Found', 'danger')
 			return redirect(url_for('find_orders'))
-		order_forms = [OrderForm(obj = order, id_field = order.id, items_field = order.items, transactions_field = order.transactions.all()) for order in orders]
+		order_forms = [OrderForm(obj = order) for order in orders]
 		return render_template('orders.html',
 								title = 'Order Results',
 								order_forms = order_forms)
@@ -111,14 +100,11 @@ def find_orders():
 			flash('Order(s) not found', 'info')
 			return redirect(url_for('find_orders'))
 
-		order_forms = [OrderForm(formdata = None, obj = order, id_field = order.id, items_field = order.items, transactions_field = order.transactions.all()) for order in orders]
-		sum_price, sum_paid, sum_balance = None, None, None
-		if form.sum_price.data:
-			sum_price = sum([order.price for order in orders])
-		if form.sum_paid.data:
-			sum_paid = sum([order.paid for order in orders])
-		if form.sum_balance.data:
-			sum_balance = sum([order.balance for order in orders])
+		order_forms = [OrderForm(formdata = None, obj = order) for order in orders]
+
+		sum_price = sum([order.price for order in orders])
+		sum_paid = sum([order.paid for order in orders])
+		sum_balance = sum([order.balance for order in orders])
 
 		return render_template('orders.html',
 								title = 'Order Results',
@@ -221,7 +207,7 @@ def customer_orders(customer_id, location):
 		if location in ['cleaners', 'delivered', 'plant']:
 			orders = customer.orders.filter_by(location = location).all()
 		if orders:
-			order_forms = [OrderForm(obj = order, items_field = order.items, transactions_field = order.transactions.all()) for order in orders]
+			order_forms = [OrderForm(obj = order) for order in orders]
 			form = CustomerForm(comments = customer.comments)
 			return render_template('customer_orders.html',
 										customer = customer,

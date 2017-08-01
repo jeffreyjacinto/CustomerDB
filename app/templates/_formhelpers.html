@@ -1,6 +1,6 @@
 {% macro render_field(field, label_size, field_size) %}
   {% if field.type != 'HiddenField' %}
-    {% if field.name != 'id' %} {{ field.label(class="control-label col-md-" + label_size|string) }} {% endif %}
+    {% if field.name != 'id_field' %} {{ field.label(class="control-label col-md-" + label_size|string) }} {% endif %}
   <div class="form-group col-md-{{ field_size }}">
     {{ field(class="form-control", **kwargs)|safe }}
   </div>
@@ -53,7 +53,7 @@
     <div class="row">
     {% for field in entry.form %}
     {% if 'csrf_token' not in field.name and 'id' not in field.name %}
-      <div class="col-md-{{ field_size }}">{{ render_field_vertical(field) }}</div>
+      <div class="col-md-{{ field_size }}">{{ render_field_vertical(field, class = entry.form.field_classes[field.label.text]) }}</div>
     {% else %}
       {{ render_field_vertical(field) }}
     {% endif %}
@@ -64,7 +64,7 @@
 
 {% macro render_fieldlist(field, num_forms, label_text) %}
   <label>{{ label_text }}</label>
-  <div class="fieldlist">
+  <div class="fieldlist {{ label_text | lower }}">
   {% for entry in field.entries %}
     {{ render_entry(entry, "entry", (12 / num_forms)|int) }}
   {% endfor %}

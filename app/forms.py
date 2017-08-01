@@ -1,7 +1,6 @@
 from flask_wtf import Form
 from wtforms import StringField, DateField, DecimalField, HiddenField, BooleanField, TextAreaField, IntegerField, SelectField, FieldList, FormField, validators
 from wtforms.widgets import HiddenInput, html_params, HTMLString
-from app.models import Customer, Order
 import decimal, datetime
 
 class Item():
@@ -16,6 +15,12 @@ class ItemForm(Form):
 	quantity = IntegerField('Qt.', validators = [validators.DataRequired()])
 	article = SelectField('Type', choices = item_choices, validators = [validators.DataRequired()])
 	price = DecimalField('Price', places = 2, validators = [validators.DataRequired()])
+
+	field_classes = {
+		'Qt.': "item_quantity form-control",
+		'Type': "item_article form-control",
+		"Price": "item_price form-control"
+	}
 
 	def __str__(self):
 		return ' -- '.join([str(self.quantity.data), self.article.data, str(self.price.data)])
@@ -47,7 +52,7 @@ class PhoneWidget(object):
 		return HTMLString('<input type="text" class="form-control bfh-phone" data-format="(ddd) ddd-dddd" %s>' % self.html_params(**kwargs))
 
 class TransactionForm(Form):
-	type_choices = ['discount', 'payment']
+	type_choices = ['payment', 'discount']
 	type_choices = [(choice, choice) for choice in type_choices]
 
 	amount = DecimalField('Amount', places = 2, validators = [validators.DataRequired()])
@@ -56,7 +61,17 @@ class TransactionForm(Form):
 	error_field = HiddenField('errors')
 	id_field = IntegerField('Id', widget = HiddenInput(), validators = [validators.Optional()])
 
+	field_classes = {
+		'Amount': "transaction_amount form-control",
+		'Type': "transaction_type form-control",
+		"Date": "transaction_date form-control"
+	}
+
 	def __init__(self, *args, **kwargs):
+		if 'obj' in kwargs:
+			transaction = kwargs['obj']
+			if transaction:
+				kwargs['id_field'] = transaction.id
 		Form.__init__(self, *args, **kwargs)
 		
 		if not self.date.data:
@@ -106,11 +121,9 @@ class OrderForm(Form):
 			kwargs['first_name'] = order.customer.first_name
 			kwargs['last_name'] = order.customer.last_name
 			kwargs['phone'] = order.customer.phone
-		if 'transactions_field' in kwargs:
-			transactions = kwargs['transactions_field']
-			del kwargs['transactions_field']
-		if 'items_field' in kwargs:
-			items = kwargs['items_field']
+			kwargs['id_field'] = order.id
+			transactions = order.transactions.all()
+			items = order.items
 			items = items.split(', ')
 			items = [OrderForm.populate_item(item) for item in items]
 			kwargs['items_field'] = items
@@ -118,7 +131,7 @@ class OrderForm(Form):
 
 		if transactions:
 			for transaction in transactions:
-				self.transactions_field.append_entry(data = dict(obj = transaction, id_field = transaction.id))
+				self.transactions_field.append_entry(data = dict(obj = transaction))
 
 		# set default dates
 		if not self.order_date.data:
@@ -175,9 +188,6 @@ class FindOrderForm(Form):
 	order_num = IntegerField('Order Number', validators = [validators.Optional()])
 	order_date = DateField('Order Date', widget = DatePickerWidget(), validators = [validators.Optional()])
 	location = SelectField('Location', choices = locations, validators = [validators.Optional()])
-	sum_price = BooleanField('Sum Prices', default = False, validators = [validators.Optional()])
-	sum_paid = BooleanField('Sum Paid', default = False, validators = [validators.Optional()])
-	sum_balance = BooleanField('Sum Balance', default = False, validators = [validators.Optional()])
 
 	def __init__(self, *args, **kwargs):
 		Form.__init__(self, *args, **kwargs)
@@ -203,7 +213,7 @@ class FindOrderForm(Form):
 
 class FindCustomerForm(Form):
 	last_name = StringField('Last Name', validators = [validators.Optional()])
-	phone = StringField('Phone', widget = PhoneWidget(), validators = [validators.Optional(), validators.Length(min = 10, max = 10)])
+	phone = StringField('Phone', widget = PhoneWidget(), validators = [validators.Optional(), validators.Length(min = 14, max = 14)])
 
 	def validate(self):
 		rv = Form.validate(self)

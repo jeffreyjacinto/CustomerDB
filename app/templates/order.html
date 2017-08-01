@@ -2,55 +2,55 @@
 {% from "_formhelpers.html" import render_field_vertical %}
 {% from "_formhelpers.html" import render_fieldlist %}
 <div {% if edit %} class="card" {% endif %}>
-  {% if edit %} <a class="collapse-control card-header" data-target="#order-{{ form.id_field.data }}"><h3>Order <small class="text-muted">#{{ form.order_num.data }}</small> <small class="text-muted">{{ form.last_name.data }}</small> <small class="text-muted">{{ form.order_date.data.isoformat() }}</small></h3></a> {% endif %}
-  <div {% if edit %} id="order-{{ form.id_field.data }}" class="collapse card-block" {% endif %}>
-    <form class="order-form" {% if edit %} toEdit="true" action="{{ url_for('edit_order', order_id = form.id_field.data) }}" {% else %} action="" toEdit="false" {% endif %} method="post" name="order">
-      {{ form.hidden_tag() }}
-      <div class="form-group">
-        <div class="row">
-          {{ render_field(form.first_name, 2, 4) }}
-          {{ render_field(form.last_name, 2, 4) }}
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="row">
-          {{ render_field(form.phone, 2, 4) }}
-          {{ render_field(form.order_num, 2, 4) }}
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="row">
-          <div class="col-md-4">{{ render_field_vertical(form.order_date) }}</div>
-          <div class="col-md-4">{{ render_field_vertical(form.est_pickup_date) }}</div>
-          <div class="col-md-4">{{ render_field_vertical(form.pickup_date) }}</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <div class="row">
-          {{ render_field(form.location, 2, 4) }}
-          {{ render_field(form.pieces, 2, 4) }}
-        </div>
-      </div>
-      <div class="form-group">
-        {{ render_fieldlist(form.items_field, 3, "Items") }}
-      </div>
-      <div class="form-group">
-        {{ render_fieldlist(form.transactions_field, 3, "Transactions") }}
-      </div>
-      <div class="form-group">
-        <div class="row">
-          <div class="col-md-5">{{ render_field(form.price) }}</div>
-          <div class="col-md-5">{{ render_field(form.paid) }}</div>
-          <div class="col-md-2">{{ render_field(form.paid_all) }}</div>
-        </div>
-      </div>
-        {{ render_field(form.comments) }}
-        {{ render_field(form.id_field) }}
-        {% if edit %}
-          <input type="submit" class="btn-default" value="Edit">
-        {% else %}
-          <input type="submit" class="btn-default" value="Order">
-        {% endif %}
-    </form>
-  </div>
+	{% if edit %} <a class="collapse-control card-header" data-target="#order-{{ form.id_field.data }}"><h3>Order <small class="text-muted">#{{ form.order_num.data }} {{ form.last_name.data }} {{ form.order_date.data.isoformat() }}</small></h3></a> {% endif %}
+	<div {% if edit %} id="order-{{ form.id_field.data }}" class="collapse card-block" {% endif %}>
+		<form class="order-form" {% if edit %} toEdit="true" action="{{ url_for('edit_order', order_id = form.id_field.data) }}" {% else %} action="" toEdit="false" {% endif %} method="post" name="order">
+			{{ form.hidden_tag() }}
+			<div class="form-group">
+				<div class="row">
+					{{ render_field(form.first_name, 2, 4) }}
+					{{ render_field(form.last_name, 2, 4) }}
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="row">
+					{{ render_field(form.phone, 2, 4) }}
+					{{ render_field(form.order_num, 2, 4) }}
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="row">
+					<div class="col-md-4">{{ render_field_vertical(form.order_date) }}</div>
+					<div class="col-md-4">{{ render_field_vertical(form.est_pickup_date) }}</div>
+					<div class="col-md-4">{{ render_field_vertical(form.pickup_date) }}</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="row">
+					{{ render_field(form.location, 2, 4) }}
+					{{ render_field(form.pieces, 2, 4, class = "pieces-total form-control") }}
+				</div>
+			</div>
+			<div class="form-group">
+				{{ render_fieldlist(form.items_field, 3, "Items") }}
+			</div>
+			<div class="form-group">
+				{{ render_fieldlist(form.transactions_field, 3, "Transactions") }}
+			</div>
+			<div class="form-group">
+				<div class="row">
+					{{ render_field(form.price, 2, 3, class = "price-total form-control") }}
+					{{ render_field(form.paid, 2, 3, class = "paid-total form-control") }}
+					<div class="col-md-2"><button type="button" class="btn-default pay-all">Pay All</button></div>
+				</div>
+			</div>
+			{{ render_field(form.comments) }}
+			{{ render_field(form.id_field) }}
+			{% if edit %}
+				<input type="submit" class="btn-default" value="Edit">
+			{% else %}
+				<input type="submit" class="btn-default" value="Order">
+			{% endif %}
+		</form>
+	</div>
 </div>
